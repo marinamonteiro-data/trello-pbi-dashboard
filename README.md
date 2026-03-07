@@ -8,6 +8,7 @@ Análise de KPIs de Equipes baseada em Fluxos de Trabalho (Checklists)
 Este projeto nasceu da necessidade de mensurar a eficiência operacional em um ambiente de gestão ágil. Utilizando a API do Trello, desenvolvi um pipeline de dados que extrai informações detalhadas de cartões e, especificamente, o progresso de checklists, transformando dados qualitativos de gestão em métricas quantitativas de desempenho.
 
 🧠 Abordagem Metodológica (Visão de Economista)
-Diferente de dashboards comuns de "status", esta solução aplica conceitos de:
 
-Análise de Fluxo (Throughput): Medição da vazão de itens concluídos por período.
+Diferente de dashboards comuns de "status", esta solução aplica conceitos de:
+ - Análise de Fluxo (Throughput): Medição da vazão de itens concluídos por período.
+ - Identificação de Gargalos: Aplicação de lógica de Lead Time para detectar etapas onde o processo perde tração.
