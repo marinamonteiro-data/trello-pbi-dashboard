@@ -27,3 +27,17 @@ Diferente de dashboards comuns de "status", esta solução aplica conceitos de:
 Este modelo foi adaptado para fluxos de fechamento contábil, garantindo que cada etapa do checklist de conformidade seja auditável em tempo real.
 
 ![Modelagem de Dados](Star_schema.png)
+
+# 📊 Dashboard de Produtividade: Integração Trello API & Power BI
+
+![Capa do Painel](painel_trello_capa.png)
+
+## 🔍 Visualização do Projeto
+
+### Visão Geral (Quadro de Atividades)
+Nesta tela, consolidamos os principais indicadores de entrega por setor, permitindo uma visão macro do status de conformidade.
+![Visão Geral](painel_trello_fiscal.png)
+
+### Detalhamento e Performance de Equipe
+Análise granular por item de checklist, monitoramento de prazos e distribuição de tarefas concluídas vs. pendentes.
+![Detalhamento](painel_trello_fiscal_1.jpg)
