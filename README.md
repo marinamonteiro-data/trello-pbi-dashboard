@@ -41,3 +41,37 @@ Nesta tela, consolidamos os principais indicadores de entrega por setor, permiti
 ### Detalhamento e Performance de Equipe
 Análise granular por item de checklist, monitoramento de prazos e distribuição de tarefas concluídas vs. pendentes.
 ![Detalhamento](painel_trello_fiscal_1.png)
+
+
+-----
+
+## 💻 Implementação Técnica (Linguagem M)
+
+Para garantir a transparência do processo de ETL, abaixo apresento o script principal utilizado para o consumo da API do Trello. Note o uso de `RelativePath` para otimização da segurança e performance no Power BI Service.
+
+```powerquery
+let
+    // Parâmetros de Conexão
+    BoardID = "SEU_QUADRO",
+    APIKey = "SUA_CHAVE",
+    APIToken = "SEU_TOKEN",
+
+    Fonte = Json.Document(
+        Web.Contents(
+            "[https://api.trello.com](https://api.trello.com)",
+            [
+                RelativePath = "1/boards/" & BoardID & "/cards",
+                Query = [ key = APIKey, token = APIToken ]
+            ]
+        )
+    ),
+
+    #"Convertido para Tabela" = Table.FromList(Fonte, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    
+    #"Column1 Expandido" = Table.ExpandRecordColumn(#"Convertido para Tabela", "Column1", 
+        {"id", "name", "idList", "due", "closed", "dateLastActivity"}, 
+        {"id_card", "Nome_Card", "id_list", "Data_Entrega", "Arquivado", "Ultima_Atividade"}),
+
+    #"Função Personalizada Invocada" = Table.AddColumn(#"Column1 Expandido", "Checklists", each fn_Checklists_Card([id_card], [Nome_Card]))
+in
+    #"Função Personalizada Invocada"
