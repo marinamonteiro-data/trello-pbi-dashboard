@@ -26,7 +26,7 @@ Diferente de dashboards comuns de "status", esta solução aplica conceitos de:
 
 Este modelo foi adaptado para fluxos de fechamento contábil, garantindo que cada etapa do checklist de conformidade seja auditável em tempo real.
 
-![Modelagem de Dados](Star_schema.png)
+![Modelagem de Dados](Star_schema_pbi.png)
 
 # 📊 Dashboard de Produtividade: Integração Trello API & Power BI
 
