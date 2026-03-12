@@ -1,47 +1,43 @@
 let
-    /* Conexão com a API do Trello - Extração de Cards
-       Este script utiliza parâmetros para evitar problemas de privacidade e 
-       facilitar a manutenção do pipeline de dados.
-    */
-    
-    // Configurações de Acesso (Substitua pelos seus dados no Power BI local)
-    BoardID = "SEU_QUADRO",
-    APIKey = "SUA_CHAVE",
-    APIToken = "SEU_TOKEN",
-
+    // Conexão com a API do Trello utilizando RelativePath para garantir atualização no Service
     Fonte = Json.Document(
         Web.Contents(
-            "https://api.trello.com",
+            "[https://api.trello.com](https://api.trello.com)",
             [
-                RelativePath = "1/boards/" & BoardID & "/cards",
+                RelativePath = "1/boards/SEU_QUADRO/cards",
                 Query = [
-                    key = APIKey,
-                    token = APIToken
+                    key = "SUA_CHAVE",
+                    token = "SEU_TOKEN"
                 ]
             ]
         )
     ),
 
-    // Transformação Inicial
+    // Conversão de JSON para Tabela e Expansão Inicial
     #"Convertido para Tabela" = Table.FromList(Fonte, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
-    
-    // Expansão seletiva dos campos do Trello
     #"Column1 Expandido" = Table.ExpandRecordColumn(#"Convertido para Tabela", "Column1", 
-        {"id", "name", "idList", "due", "closed", "dateLastActivity", "desc"}, 
-        {"id_card", "Nome_Card", "id_list", "Data_Entrega", "Arquivado", "Ultima_Atividade", "Descricao"}),
+        {"id", "closed", "dueComplete", "dateLastActivity", "desc", "due", "idBoard", "idList", "name"}, 
+        {"id", "closed", "dueComplete", "dateLastActivity", "desc", "due", "idBoard", "idList", "name"}),
 
-    // Invocação da função personalizada para buscar checklists vinculados
-    // Nota: Certifique-se de que a função fn_Checklists_Card esteja criada no seu arquivo.
-    #"Função Personalizada Invocada" = Table.AddColumn(#"Column1 Expandido", "Checklists", each fn_Checklists_Card([id_card], [Nome_Card])),
+    // Tipagem dos Dados para garantir performance em cálculos DAX
+    #"Tipo Alterado" = Table.TransformColumnTypes(#"Column1 Expandido", {
+        {"id", type text}, 
+        {"closed", type logical}, 
+        {"dueComplete", type logical}, 
+        {"dateLastActivity", type datetime}, 
+        {"desc", type text}, 
+        {"due", type datetime}, 
+        {"idBoard", type text}, 
+        {"idList", type text}, 
+        {"name", type text}
+    }),
 
-    // Tipagem dos dados
-    #"Tipo Alterado" = Table.TransformColumnTypes(#"Função Personalizada Invocada", {
-        {"id_card", type text}, 
-        {"Nome_Card", type text}, 
-        {"id_list", type text}, 
-        {"Data_Entrega", type datetime}, 
-        {"Arquivado", type logical}, 
-        {"Ultima_Atividade", type datetime}
-    })
+    // Invocação de Função Personalizada para granularidade de Checklists
+    #"Função Personalizada Invocada" = Table.AddColumn(#"Tipo Alterado", "Checklists", each fn_Checklists_Card([id], [name])),
+    
+    // Ajuste Final de Nomenclatura para o Modelo Star Schema
+    #"Colunas Renomeadas" = Table.RenameColumns(#"Função Personalizada Invocada",{{"id", "id_card"}})
 in
-    #"Tipo Alterado"
+    #"Colunas Renomeadas"
+
+
