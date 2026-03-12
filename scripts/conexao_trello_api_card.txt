@@ -1,28 +1,47 @@
 let
+    /* Conexão com a API do Trello - Extração de Cards
+       Este script utiliza parâmetros para evitar problemas de privacidade e 
+       facilitar a manutenção do pipeline de dados.
+    */
+    
+    // Configurações de Acesso (Substitua pelos seus dados no Power BI local)
+    BoardID = "SEU_QUADRO",
+    APIKey = "SUA_CHAVE",
+    APIToken = "SEU_TOKEN",
+
     Fonte = Json.Document(
-    Web.Contents(
-        "https://api.trello.com",
-        [
-            RelativePath = "1/boards/SEU_QUADRO/cards",
-            Query = [
-                key = "SUA_CHAVE",
-                token = "SEU_TOKEN"
+        Web.Contents(
+            "https://api.trello.com",
+            [
+                RelativePath = "1/boards/" & BoardID & "/cards",
+                Query = [
+                    key = APIKey,
+                    token = APIToken
+                ]
             ]
-        ]
-    )
-),
+        )
+    ),
+
+    // Transformação Inicial
     #"Convertido para Tabela" = Table.FromList(Fonte, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
-    #"Column1 Expandido" = Table.ExpandRecordColumn(#"Convertido para Tabela", "Column1", {"id", "agent", "badges", "checkItemStates", "closed", "dueComplete", "dateLastActivity", "desc", "descData", "due", "dueReminder", "email", "idBoard", "idChecklists", "idList", "idMembers", "idMembersVoted", "idShort", "idAttachmentCover", "labels", "idLabels", "manualCoverAttachment", "name", "nodeId", "pinned", "pos", "shortLink", "shortUrl", "start", "subscribed", "url", "cover", "isTemplate", "cardRole", "mirrorSourceId"}, {"id", "agent", "badges", "checkItemStates", "closed", "dueComplete", "dateLastActivity", "desc", "descData", "due", "dueReminder", "email", "idBoard", "idChecklists", "idList", "idMembers", "idMembersVoted", "idShort", "idAttachmentCover", "labels", "idLabels", "manualCoverAttachment", "name", "nodeId", "pinned", "pos", "shortLink", "shortUrl", "start", "subscribed", "url", "cover", "isTemplate", "cardRole", "mirrorSourceId"}),
-    #"agent Expandido" = Table.ExpandRecordColumn(#"Column1 Expandido", "agent", {"name", "conversationId"}, {"agent.name", "agent.conversationId"}),
-    #"badges Expandido" = Table.ExpandRecordColumn(#"agent Expandido", "badges", {"fogbugz", "checkItems", "checkItemsChecked", "checkItemsEarliestDue", "comments", "attachments", "description", "due", "dueComplete", "start", "ai", "lastUpdatedByAi", "attachmentsByType", "externalSource", "location", "votes", "maliciousAttachments", "viewingMemberVoted", "subscribed"}, {"badges.fogbugz", "badges.checkItems", "badges.checkItemsChecked", "badges.checkItemsEarliestDue", "badges.comments", "badges.attachments", "badges.description", "badges.due", "badges.dueComplete", "badges.start", "badges.ai", "badges.lastUpdatedByAi", "badges.attachmentsByType", "badges.externalSource", "badges.location", "badges.votes", "badges.maliciousAttachments", "badges.viewingMemberVoted", "badges.subscribed"}),
-    #"badges.attachmentsByType Expandido" = Table.ExpandRecordColumn(#"badges Expandido", "badges.attachmentsByType", {"trello"}, {"badges.attachmentsByType.trello"}),
-    #"badges.attachmentsByType.trello Expandido" = Table.ExpandRecordColumn(#"badges.attachmentsByType Expandido", "badges.attachmentsByType.trello", {"board", "card"}, {"badges.attachmentsByType.trello.board", "badges.attachmentsByType.trello.card"}),
-    #"descData Expandido" = Table.ExpandRecordColumn(#"badges.attachmentsByType.trello Expandido", "descData", {"emoji"}, {"descData.emoji"}),
-    #"descData.emoji Expandido" = Table.ExpandRecordColumn(#"descData Expandido", "descData.emoji", {}, {}),
-    #"cover Expandido" = Table.ExpandRecordColumn(#"descData.emoji Expandido", "cover", {"idAttachment", "color", "idUploadedBackground", "size", "brightness", "yPosition", "idPlugin"}, {"cover.idAttachment", "cover.color", "cover.idUploadedBackground", "cover.size", "cover.brightness", "cover.yPosition", "cover.idPlugin"}),
-    #"Tipo Alterado" = Table.TransformColumnTypes(#"cover Expandido",{{"id", type text}, {"agent.name", type any}, {"agent.conversationId", type any}, {"badges.fogbugz", type any}, {"badges.checkItems", Int64.Type}, {"badges.checkItemsChecked", Int64.Type}, {"badges.checkItemsEarliestDue", type any}, {"badges.comments", Int64.Type}, {"badges.attachments", Int64.Type}, {"badges.description", type logical}, {"badges.due", type datetime}, {"badges.dueComplete", type logical}, {"badges.start", type any}, {"badges.ai", type any}, {"badges.lastUpdatedByAi", type logical}, {"badges.attachmentsByType.trello.board", Int64.Type}, {"badges.attachmentsByType.trello.card", Int64.Type}, {"badges.externalSource", type any}, {"badges.location", type logical}, {"badges.votes", Int64.Type}, {"badges.maliciousAttachments", Int64.Type}, {"badges.viewingMemberVoted", type logical}, {"badges.subscribed", type logical}, {"checkItemStates", type any}, {"closed", type logical}, {"dueComplete", type logical}, {"dateLastActivity", type datetime}, {"desc", type text}, {"due", type datetime}, {"dueReminder", Int64.Type}, {"email", type any}, {"idBoard", type text}, {"idChecklists", type any}, {"idList", type text}, {"idMembers", type any}, {"idMembersVoted", type any}, {"idShort", Int64.Type}, {"idAttachmentCover", type any}, {"labels", type any}, {"idLabels", type any}, {"manualCoverAttachment", type logical}, {"name", type text}, {"nodeId", type text}, {"pinned", type logical}, {"pos", type number}, {"shortLink", type text}, {"shortUrl", type text}, {"start", type any}, {"subscribed", type logical}, {"url", type text}, {"cover.idAttachment", type any}, {"cover.color", type any}, {"cover.idUploadedBackground", type any}, {"cover.size", type text}, {"cover.brightness", type text}, {"cover.yPosition", type number}, {"cover.idPlugin", type any}, {"isTemplate", type logical}, {"cardRole", type any}, {"mirrorSourceId", type any}}),
-    #"Colunas Removidas" = Table.RemoveColumns(#"Tipo Alterado",{"agent.name", "agent.conversationId", "badges.fogbugz", "badges.checkItems", "badges.checkItemsChecked", "badges.checkItemsEarliestDue", "badges.comments", "badges.attachments", "badges.description", "badges.due", "badges.dueComplete", "badges.start", "badges.ai", "badges.lastUpdatedByAi", "badges.attachmentsByType.trello.board", "badges.attachmentsByType.trello.card", "badges.externalSource", "badges.location", "badges.votes", "badges.maliciousAttachments", "badges.viewingMemberVoted", "badges.subscribed", "idMembers", "idMembersVoted", "idShort", "idAttachmentCover", "manualCoverAttachment", "pinned", "pos", "shortLink", "shortUrl", "start", "subscribed", "url", "cover.idAttachment", "cover.color", "cover.idUploadedBackground", "cover.size", "cover.brightness", "cover.yPosition", "cover.idPlugin", "isTemplate", "cardRole", "mirrorSourceId", "nodeId", "email"}),
-    #"Função Personalizada Invocada" = Table.AddColumn(#"Colunas Removidas", "Checklists", each fn_Checklists_Card([id], [name])),
-    #"Colunas Renomeadas" = Table.RenameColumns(#"Função Personalizada Invocada",{{"id", "id_card"}})
+    
+    // Expansão seletiva dos campos do Trello
+    #"Column1 Expandido" = Table.ExpandRecordColumn(#"Convertido para Tabela", "Column1", 
+        {"id", "name", "idList", "due", "closed", "dateLastActivity", "desc"}, 
+        {"id_card", "Nome_Card", "id_list", "Data_Entrega", "Arquivado", "Ultima_Atividade", "Descricao"}),
+
+    // Invocação da função personalizada para buscar checklists vinculados
+    // Nota: Certifique-se de que a função fn_Checklists_Card esteja criada no seu arquivo.
+    #"Função Personalizada Invocada" = Table.AddColumn(#"Column1 Expandido", "Checklists", each fn_Checklists_Card([id_card], [Nome_Card])),
+
+    // Tipagem dos dados
+    #"Tipo Alterado" = Table.TransformColumnTypes(#"Função Personalizada Invocada", {
+        {"id_card", type text}, 
+        {"Nome_Card", type text}, 
+        {"id_list", type text}, 
+        {"Data_Entrega", type datetime}, 
+        {"Arquivado", type logical}, 
+        {"Ultima_Atividade", type datetime}
+    })
 in
-    #"Colunas Renomeadas"
+    #"Tipo Alterado"
