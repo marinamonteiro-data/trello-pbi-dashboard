@@ -40,4 +40,4 @@ Nesta tela, consolidamos os principais indicadores de entrega por setor, permiti
 
 ### Detalhamento e Performance de Equipe
 Análise granular por item de checklist, monitoramento de prazos e distribuição de tarefas concluídas vs. pendentes.
-![Detalhamento](painel_trello_fiscal_1.jpg)
+![Detalhamento](painel_trello_fiscal_1.png)
