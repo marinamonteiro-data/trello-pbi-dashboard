@@ -94,5 +94,4 @@ let
 in
     #"Colunas Renomeadas"
 
-### 💻 Implementação Técnica (M Language)
 
