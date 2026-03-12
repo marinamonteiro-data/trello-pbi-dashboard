@@ -49,15 +49,50 @@ Análise granular por item de checklist, monitoramento de prazos e distribuiçã
 
 Para garantir a transparência do processo de ETL, abaixo apresento o script principal utilizado para o consumo da API do Trello. Note o uso de `RelativePath` para otimização da segurança e performance no Power BI Service.
 
-### 💻 Implementação Técnica (M Language)
+### 💻 Implementação Técnica: Extração de Cards (Linguagem M)
 
 ```powerquery
 let
-    BoardID = "SEU_QUADRO",
-    APIKey = "SUA_CHAVE",
-    APIToken = "SEU_TOKEN",
-    Fonte = Json.Document(Web.Contents("[https://api.trello.com](https://api.trello.com)", [RelativePath = "1/boards/" & BoardID & "/cards", Query = [key = APIKey, token = APIToken]])),
-    Tabela = Table.FromList(Fonte, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
-    Expandido = Table.ExpandRecordColumn(Tabela, "Column1", {"id", "name", "idList"}, {"id_card", "Nome", "id_list"})
+    // Conexão com a API do Trello utilizando RelativePath para garantir atualização no Service
+    Fonte = Json.Document(
+        Web.Contents(
+            "[https://api.trello.com](https://api.trello.com)",
+            [
+                RelativePath = "1/boards/SEU_QUADRO/cards",
+                Query = [
+                    key = "SUA_CHAVE",
+                    token = "SEU_TOKEN"
+                ]
+            ]
+        )
+    ),
+
+    // Conversão de JSON para Tabela e Expansão Inicial
+    #"Convertido para Tabela" = Table.FromList(Fonte, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    #"Column1 Expandido" = Table.ExpandRecordColumn(#"Convertido para Tabela", "Column1", 
+        {"id", "closed", "dueComplete", "dateLastActivity", "desc", "due", "idBoard", "idList", "name"}, 
+        {"id", "closed", "dueComplete", "dateLastActivity", "desc", "due", "idBoard", "idList", "name"}),
+
+    // Tipagem dos Dados para garantir performance em cálculos DAX
+    #"Tipo Alterado" = Table.TransformColumnTypes(#"Column1 Expandido", {
+        {"id", type text}, 
+        {"closed", type logical}, 
+        {"dueComplete", type logical}, 
+        {"dateLastActivity", type datetime}, 
+        {"desc", type text}, 
+        {"due", type datetime}, 
+        {"idBoard", type text}, 
+        {"idList", type text}, 
+        {"name", type text}
+    }),
+
+    // Invocação de Função Personalizada para granularidade de Checklists
+    #"Função Personalizada Invocada" = Table.AddColumn(#"Tipo Alterado", "Checklists", each fn_Checklists_Card([id], [name])),
+    
+    // Ajuste Final de Nomenclatura para o Modelo Star Schema
+    #"Colunas Renomeadas" = Table.RenameColumns(#"Função Personalizada Invocada",{{"id", "id_card"}})
 in
-    Expandido
+    #"Colunas Renomeadas"
+
+### 💻 Implementação Técnica (M Language)
+
