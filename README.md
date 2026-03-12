@@ -25,3 +25,5 @@ Diferente de dashboards comuns de "status", esta solução aplica conceitos de:
  - Monitoramento de Backlog: Envelhecimento dos cartões sem movimentação de checklist (em andamento).
 
 Este modelo foi adaptado para fluxos de fechamento contábil, garantindo que cada etapa do checklist de conformidade seja auditável em tempo real.
+
+![Modelagem de Dados](Star_schema.png)
